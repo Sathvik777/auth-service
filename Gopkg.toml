@@ -26,10 +26,6 @@
 
 
 [[constraint]]
-  name = "github.com/Storytel/go-logrus-fluentd"
-  version = "1.0.0"
-
-[[constraint]]
   branch = "master"
   name = "github.com/facebookgo/inject"
 

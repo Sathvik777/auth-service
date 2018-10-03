@@ -14,7 +14,6 @@ import (
 	"github.com/urfave/negroni"
 
 	"github.com/Sathvik777/auth-service/middleware"
-	"github.com/Storytel/go-logrus-fluentd"
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -28,7 +27,7 @@ func setupEnv() {
 }
 
 func setupLogging() {
-	log.SetFormatter(logrusfluentd.NewFormatter("logger-service"))
+
 	if os.Getenv("ENV") == "dev" {
 		log.SetFormatter(&log.TextFormatter{})
 	}

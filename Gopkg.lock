@@ -2,12 +2,6 @@
 
 
 [[projects]]
-  name = "github.com/Storytel/go-logrus-fluentd"
-  packages = ["."]
-  revision = "3a2b9aa28d7b6d4d5f649c982502590171a3a144"
-  version = "1.0.0"
-
-[[projects]]
   branch = "master"
   name = "github.com/facebookgo/inject"
   packages = ["."]
@@ -79,6 +73,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b5714b143f2693882cf4daac2615800a0b5f1a648a6f5ab16ccdbffc70c27104"
+  inputs-digest = "a9bb87311e0a1c787040e4a037c50e948312ce0c73f74ca61b4b0376710efe49"
   solver-name = "gps-cdcl"
   solver-version = 1
