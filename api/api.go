@@ -43,11 +43,10 @@ func (a *ServiceAPI) signUp() func(w http.ResponseWriter, r *http.Request, next 
 			http.Error(w, "Unable to decode request", http.StatusInternalServerError)
 			return
 		}
+		basicResponse := response.BasicResponse{}
+		if len(signUpReq.Password) == 0 || len(signUpReq.Email) == 0 {
 
-		logType := signUpReq.LogType
-
-		if signUpReq.password == nil || signUpReq.email == nil {
-			basicResponse.err = "Request parameter missing"
+			basicResponse.Err = "Request parameter missing"
 			basicResponseJson, err := json.Marshal(basicResponse)
 			if err != nil {
 				logrus.Error(err)
@@ -58,13 +57,13 @@ func (a *ServiceAPI) signUp() func(w http.ResponseWriter, r *http.Request, next 
 			return
 		}
 
-		if token, err = a.DBOps.InsertLog(signUpReq); err != nil {
+		token, err := a.DBOps.InsertUser(signUpReq)
+		if err != nil {
 			// Silent fail
 			logrus.Errorf("Log insert failed", err)
 		}
 
-		basicResponse := response.BasicResponse{}
-		basicResponse.token = token
+		basicResponse.Token = token
 		basicResponseJson, err := json.Marshal(basicResponse)
 		if err != nil {
 			http.Error(w, "Unable to marshal response", http.StatusInternalServerError)

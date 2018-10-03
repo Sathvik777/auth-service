@@ -9,7 +9,7 @@ import (
 )
 
 type DbOps interface {
-	InsertUser(request request.BlobRequest) error
+	InsertUser(request request.SignUpRequest) (string, error)
 }
 
 type DbOpsImpl struct {
@@ -18,18 +18,23 @@ type DbOpsImpl struct {
 
 var _ DbOps = &DbOpsImpl{}
 
-func (ops *DbOpsImpl) InsertUser(request request.SignUpRequest) string, error {
+func (ops *DbOpsImpl) InsertUser(request request.SignUpRequest) (string, error) {
 
 	uuid, err := exec.Command("uuidgen").Output()
 
-	var email = "'" + request.email + "'"
-	var password = "'" + request.password + "'"
-	var token = "'" + uuid + "'"
+	if err != nil {
+		logrus.Errorln("No token created : ", err)
+		return "", err
+	}
+
+	var email = "'" + request.Email + "'"
+	var password = "'" + request.Password + "'"
+	var token = "'" + string(uuid) + "'"
 
 	var sqlInsertQuery = "INSERT INTO USERS (email, password, token) VALUES (" + email + ", " + password + ", " + token + " )"
 	if _, err := ops.DbClient.Exec(sqlInsertQuery); err != nil {
 		logrus.Errorln("DB INSERT ERROR : ", err)
-		return nil , err
+		return "", err
 	}
 	return token, nil
 }
