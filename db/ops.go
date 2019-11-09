@@ -8,15 +8,13 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type DbOps interface {
+type Ops interface {
 	InsertUser(request request.SignUpRequest) (string, error)
 }
 
 type DbOpsImpl struct {
 	DbClient *sql.DB `inject:""`
 }
-
-var _ DbOps = &DbOpsImpl{}
 
 func (ops *DbOpsImpl) InsertUser(request request.SignUpRequest) (string, error) {
 
@@ -30,7 +28,6 @@ func (ops *DbOpsImpl) InsertUser(request request.SignUpRequest) (string, error) 
 	var email = "'" + request.Email + "'"
 	var password = "'" + request.Password + "'"
 	var token = "'" + string(uuid) + "'"
-
 	var sqlInsertQuery = "INSERT INTO USERS (email, password, token) VALUES (" + email + ", " + password + ", " + token + " )"
 	if _, err := ops.DbClient.Exec(sqlInsertQuery); err != nil {
 		logrus.Errorln("DB INSERT ERROR : ", err)

@@ -15,7 +15,7 @@ import (
 )
 
 type ServiceAPI struct {
-	DBOps db.DbOps `inject:""`
+	DBOps db.Ops `inject:""`
 }
 
 // InitRouter initializes the router with path specific handler functions
