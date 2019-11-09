@@ -1,5 +1,5 @@
 
-# auth-service
+# go-api-skeleton
 
 
 # Installation

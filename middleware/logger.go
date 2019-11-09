@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Sathvik777/auth-service/util"
+	"github.com/Sathvik777/go-api-skeleton/util"
 	"github.com/urfave/negroni"
 
 	log "github.com/sirupsen/logrus"

@@ -4,16 +4,16 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/Sathvik777/auth-service/db"
+	"github.com/Sathvik777/go-api-skeleton/db"
 
-	"github.com/Sathvik777/auth-service/api"
-	"github.com/Sathvik777/auth-service/liveness"
+	"github.com/Sathvik777/go-api-skeleton/api"
+	"github.com/Sathvik777/go-api-skeleton/liveness"
 
 	"github.com/facebookgo/inject"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/negroni"
 
-	"github.com/Sathvik777/auth-service/middleware"
+	"github.com/Sathvik777/go-api-skeleton/middleware"
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"

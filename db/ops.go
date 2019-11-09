@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"os/exec"
 
-	"github.com/Sathvik777/auth-service/request"
+	"github.com/Sathvik777/go-api-skeleton/request"
 	"github.com/sirupsen/logrus"
 )
 

@@ -5,11 +5,11 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/Sathvik777/auth-service/db"
-	"github.com/Sathvik777/auth-service/request"
+	"github.com/Sathvik777/go-api-skeleton/db"
+	"github.com/Sathvik777/go-api-skeleton/request"
 	"github.com/sirupsen/logrus"
 
-	"github.com/Sathvik777/auth-service/response"
+	"github.com/Sathvik777/go-api-skeleton/response"
 	"github.com/gorilla/mux"
 	"github.com/urfave/negroni"
 )
