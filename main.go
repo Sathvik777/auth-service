@@ -1,105 +1,69 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
-	"os"
-
-	"github.com/Sathvik777/go-api-skeleton/db"
 
 	"github.com/Sathvik777/go-api-skeleton/api"
-	"github.com/Sathvik777/go-api-skeleton/liveness"
-
-	"github.com/facebookgo/inject"
-	log "github.com/sirupsen/logrus"
-	"github.com/urfave/negroni"
-
-	"github.com/Sathvik777/go-api-skeleton/middleware"
-
-	"github.com/gorilla/mux"
-	"github.com/joho/godotenv"
+	"github.com/Sathvik777/go-api-skeleton/db"
+	"gopkg.in/yaml.v2"
 )
 
-func setupEnv() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Debug("Error loading .env files. ", err)
-	}
+type serverConfig struct {
+	Port int `yaml:"port"`
 }
 
-func setupLogging() {
+//Config is a yaml replication
+type Config struct {
+	Server   serverConfig `yaml:"server"`
+	Database db.DbConfig  `yaml:"database"`
+}
 
-	if os.Getenv("ENV") == "dev" {
-		log.SetFormatter(&log.TextFormatter{})
+func setupDb(config db.DbConfig) db.DbOpsImpl {
+	sqlCLient, err := db.Init(config)
+	if err != nil {
+		log.Fatal("Could not connect to DB")
 	}
+	return db.DbOpsImpl{DbClient: sqlCLient}
+}
 
-	if level := os.Getenv("LOG_LEVEL"); len(level) > 0 {
-		ll, err := log.ParseLevel(level)
-		if err == nil {
-			log.SetLevel(ll)
-		} else {
-			log.Info("Failed to parse log level. Will use default: %s", err.Error())
+func setupRouting(client db.DbOpsImpl) {
+
+	messageAPI := api.MessageAPI{}
+
+	handleProduct := func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			messageAPI.Get(w, r)
+		case http.MethodPost:
+			messageAPI.Create(w, r)
+		case http.MethodPut:
+			messageAPI.Update(w, r)
+		case http.MethodDelete:
+			messageAPI.Delete(w, r)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
 	}
-}
 
-func setupRouting(app *App) *negroni.Negroni {
-	router := mux.NewRouter().StrictSlash(true)
-
-	app.HealthAPI.InitRouter(router)
-	app.ReadinessAPI.InitRouter(router)
-	app.ServiceAPI.InitRouter(router)
-
-	n := negroni.New()
-	n.Use(middleware.Logger{
-		ExludePaths: []string{"/health", "/readiness"},
-	})
-	n.UseHandler(router)
-
-	return n
-}
-
-// App contains the context and configuration for the project
-type App struct {
-	HealthAPI    *liveness.HealthAPI    `inject:""`
-	ReadinessAPI *liveness.ReadinessAPI `inject:""`
-	ServiceAPI   *api.ServiceAPI        `inject:""`
-}
-
-func bootstrapApp() App {
-	g := inject.Graph{}
-	g.Logger = log.StandardLogger()
-
-	app := App{}
-	DbClient, err := db.Init()
-
-	if err != nil {
-		log.Fatal("DB Initialize failed:", err)
-	}
-
-	err = g.Provide(
-		&inject.Object{Value: &app},
-		&inject.Object{Value: DbClient},
-		&inject.Object{Value: &db.DbOpsImpl{}},
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if err = g.Populate(); err != nil {
-		log.Fatal(err)
-	}
-
-	return app
+	http.HandleFunc("/health", api.Health)
+	http.HandleFunc("/api/products/", handleProduct)
 }
 
 func main() {
-	setupEnv()
-	setupLogging()
-	app := bootstrapApp()
-
-	router := setupRouting(&app)
-
-	port := os.Getenv("SERV_PORT")
-	log.Debugf("Listening on port %s", port)
-	log.Fatal(http.ListenAndServe(":"+port, router))
+	var config Config
+	configYaml, err := ioutil.ReadFile("config.yaml")
+	if err != nil {
+		log.Fatalf("failed to find config file : %s", err)
+	}
+	if err = yaml.Unmarshal(configYaml, &config); err != nil {
+		log.Fatalf("failed to unmarshal config file : %s", err)
+	}
+	dbClient := setupDb(config.Database)
+	setupRouting(dbClient)
+	if err := http.ListenAndServe(fmt.Sprintf(":%d", config.Server.Port), nil); err != nil {
+		log.Fatal("Serving exited with error")
+	}
 }

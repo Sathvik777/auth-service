@@ -2,36 +2,39 @@ package db
 
 import (
 	"database/sql"
-	"os/exec"
 
-	"github.com/Sathvik777/go-api-skeleton/request"
-	"github.com/sirupsen/logrus"
+	"github.com/Sathvik777/go-api-skeleton/httpbody"
 )
 
 type Ops interface {
-	InsertUser(request request.SignUpRequest) (string, error)
+	GetProduct(id int) (httpbody.BasicResponse, error)
+	InsertProduct(request httpbody.MessageRequest) (string, error)
+	UpdateProduct(request httpbody.MessageRequest) error
+	DeleteProduct(id int) error
 }
 
 type DbOpsImpl struct {
-	DbClient *sql.DB `inject:""`
+	DbClient *sql.DB
 }
 
-func (ops *DbOpsImpl) InsertUser(request request.SignUpRequest) (string, error) {
+var _ Ops = &DbOpsImpl{}
 
-	uuid, err := exec.Command("uuidgen").Output()
+func (ops *DbOpsImpl) GetProduct(id int) (httpbody.BasicResponse, error) {
 
-	if err != nil {
-		logrus.Errorln("No token created : ", err)
-		return "", err
-	}
+	return httpbody.BasicResponse{}, nil
+}
 
-	var email = "'" + request.Email + "'"
-	var password = "'" + request.Password + "'"
-	var token = "'" + string(uuid) + "'"
-	var sqlInsertQuery = "INSERT INTO USERS (email, password, token) VALUES (" + email + ", " + password + ", " + token + " )"
-	if _, err := ops.DbClient.Exec(sqlInsertQuery); err != nil {
-		logrus.Errorln("DB INSERT ERROR : ", err)
-		return "", err
-	}
-	return token, nil
+func (ops *DbOpsImpl) InsertProduct(request httpbody.MessageRequest) (string, error) {
+
+	return "", nil
+}
+
+func (ops *DbOpsImpl) UpdateProduct(request httpbody.MessageRequest) error {
+
+	return nil
+}
+
+func (ops *DbOpsImpl) DeleteProduct(id int) error {
+
+	return nil
 }
