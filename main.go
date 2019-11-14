@@ -1,10 +1,15 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/Sathvik777/go-api-skeleton/api"
 	"github.com/Sathvik777/go-api-skeleton/db"
@@ -19,6 +24,18 @@ type serverConfig struct {
 type Config struct {
 	Server   serverConfig `yaml:"server"`
 	Database db.DbConfig  `yaml:"database"`
+}
+
+func setUpConfig(filename string) Config {
+	var config Config
+	configYaml, err := ioutil.ReadFile("config.yaml")
+	if err != nil {
+		log.Fatalf("failed to find config file : %s", err)
+	}
+	if err = yaml.Unmarshal(configYaml, &config); err != nil {
+		log.Fatalf("failed to unmarshal config file : %s", err)
+	}
+	return config
 }
 
 func setupDb(config db.DbConfig) db.DbOpsImpl {
@@ -49,21 +66,41 @@ func setupRouting(client db.DbOpsImpl) {
 	}
 
 	http.HandleFunc("/health", api.Health)
-	http.HandleFunc("/api/products/", handleProduct)
+	http.HandleFunc("/api/message/", handleProduct)
+}
+
+func waitForShutdown(srv *http.Server) {
+	interruptChan := make(chan os.Signal, 1)
+	signal.Notify(interruptChan, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	// Block until we receive our signal.
+	<-interruptChan
+	// Create a deadline to wait for.
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+	srv.Shutdown(ctx)
+
+	log.Println("Shutting down")
+	os.Exit(0)
 }
 
 func main() {
-	var config Config
-	configYaml, err := ioutil.ReadFile("config.yaml")
-	if err != nil {
-		log.Fatalf("failed to find config file : %s", err)
-	}
-	if err = yaml.Unmarshal(configYaml, &config); err != nil {
-		log.Fatalf("failed to unmarshal config file : %s", err)
-	}
+	config := setUpConfig("config.yaml")
 	dbClient := setupDb(config.Database)
 	setupRouting(dbClient)
-	if err := http.ListenAndServe(fmt.Sprintf(":%d", config.Server.Port), nil); err != nil {
-		log.Fatal("Serving exited with error")
+
+	srv := &http.Server{
+		Addr:         fmt.Sprintf(":%d", config.Server.Port),
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
 	}
+
+	go func() {
+		log.Println("Starting Server")
+		if err := srv.ListenAndServe(); err != nil {
+			log.Fatal("Serving exited with error")
+		}
+	}()
+
+	// Graceful Shutdown
+	waitForShutdown(srv)
 }
