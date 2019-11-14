@@ -66,7 +66,7 @@ func setupRouting(client db.DbOpsImpl) {
 	}
 
 	http.HandleFunc("/health", api.Health)
-	http.HandleFunc("/api/message/", handleProduct)
+	http.HandleFunc("/api/messages/", handleProduct)
 }
 
 func waitForShutdown(srv *http.Server) {
