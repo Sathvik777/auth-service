@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
@@ -11,7 +12,7 @@ import (
 )
 
 type MessageAPI struct {
-	DBOps db.Ops
+	DBOps db.DbOpsImpl
 }
 
 func (a *MessageAPI) Get(w http.ResponseWriter, r *http.Request) {
@@ -33,10 +34,43 @@ func (a *MessageAPI) getAll(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *MessageAPI) Create(w http.ResponseWriter, r *http.Request) {
-	witeResponse(w, nil, http.StatusOK)
+
+	decoder := json.NewDecoder(r.Body)
+	var req httpbody.MessageRequest
+	err := decoder.Decode(&req)
+	if err != nil {
+		log.Panicf("Failed to decode %d", err)
+		http.Error(w, "Unable to decode request", http.StatusInternalServerError)
+		return
+	}
+
+	id, err := a.DBOps.InsertMessage(req)
+	if err != nil {
+		log.Panicf("Failed to insert %d", err)
+		http.Error(w, "Unable to decode request", http.StatusInternalServerError)
+		return
+	}
+	rep := httpbody.BasicResponse{Id: int(id)}
+	witeResponse(w, rep, http.StatusOK)
 }
 
 func (a *MessageAPI) Update(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	var req httpbody.MessageRequest
+	err := decoder.Decode(&req)
+	if err != nil {
+		log.Panicf("Failed to decode %d", err)
+		http.Error(w, "Unable to decode request", http.StatusInternalServerError)
+		return
+	}
+
+	err = a.DBOps.UpdateMessage(req)
+	if err != nil {
+		log.Panicf("Failed to Update %d", err)
+		http.Error(w, "Unable to decode request", http.StatusInternalServerError)
+		return
+	}
+
 	witeResponse(w, nil, http.StatusOK)
 }
 
