@@ -48,9 +48,11 @@ func setupDb(config db.DbConfig) db.DbOpsImpl {
 
 func setupRouting(client db.DbOpsImpl) {
 
-	messageAPI := api.MessageAPI{}
+	messageAPI := api.MessageAPI{DBOps: client}
 
 	handleProduct := func(w http.ResponseWriter, r *http.Request) {
+		log.Println("GOT here")
+		log.Printf("Request type %s", r.Method)
 		switch r.Method {
 		case http.MethodGet:
 			messageAPI.Get(w, r)
@@ -86,21 +88,13 @@ func waitForShutdown(srv *http.Server) {
 func main() {
 	config := setUpConfig("config.yaml")
 	dbClient := setupDb(config.Database)
-	setupRouting(dbClient)
-
-	srv := &http.Server{
-		Addr:         fmt.Sprintf(":%d", config.Server.Port),
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
+	if err := db.Migrate(dbClient.DbClient, config.Database); err != nil {
+		log.Fatal("Did not migrate")
 	}
 
-	go func() {
-		log.Println("Starting Server")
-		if err := srv.ListenAndServe(); err != nil {
-			log.Fatal("Serving exited with error")
-		}
-	}()
+	setupRouting(dbClient)
 
-	// Graceful Shutdown
-	waitForShutdown(srv)
+	if err := http.ListenAndServe(fmt.Sprintf(":%d", config.Server.Port), nil); err != nil {
+		log.Fatal("Serving exited with error")
+	}
 }
