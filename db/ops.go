@@ -2,15 +2,16 @@ package db
 
 import (
 	"database/sql"
+	"log"
 
 	"github.com/Sathvik777/go-api-skeleton/httpbody"
 )
 
 type Ops interface {
-	GetProduct(id int) (httpbody.BasicResponse, error)
-	InsertProduct(request httpbody.MessageRequest) (string, error)
-	UpdateProduct(request httpbody.MessageRequest) error
-	DeleteProduct(id int) error
+	GetMessage(id int) (httpbody.BasicResponse, error)
+	InsertMessage(request httpbody.MessageRequest) (int64, error)
+	UpdateMessage(request httpbody.MessageRequest) error
+	DeleteMessage(id int) error
 }
 
 type DbOpsImpl struct {
@@ -19,22 +20,45 @@ type DbOpsImpl struct {
 
 var _ Ops = &DbOpsImpl{}
 
-func (ops *DbOpsImpl) GetProduct(id int) (httpbody.BasicResponse, error) {
+func (ops *DbOpsImpl) GetMessage(id int) (httpbody.BasicResponse, error) {
 
 	return httpbody.BasicResponse{}, nil
 }
 
-func (ops *DbOpsImpl) InsertProduct(request httpbody.MessageRequest) (string, error) {
+func (ops *DbOpsImpl) InsertMessage(request httpbody.MessageRequest) (int64, error) {
+	stmt, err := ops.DbClient.Prepare("INSERT messages (message) VALUES (?)")
+	if err != nil {
+		log.Panicf("Cannot create statement d%", err)
+		return 0, err
+	}
 
-	return "", nil
+	res, err := stmt.Exec(request.Message)
+	if err != nil {
+		log.Panicf("Cannot Execute statement d%", err)
+		return 0, err
+	}
+
+	return res.LastInsertId()
 }
 
-func (ops *DbOpsImpl) UpdateProduct(request httpbody.MessageRequest) error {
+func (ops *DbOpsImpl) UpdateMessage(request httpbody.MessageRequest) error {
+
+	stmt, err := ops.DbClient.Prepare("UPDATE messages SET message = ? WHERE id = ?")
+	if err != nil {
+		log.Panicf("Cannot create statement d%", err)
+		return err
+	}
+
+	_, err = stmt.Exec(request.Message, request.Id)
+	if err != nil {
+		log.Panicf("Cannot Execute statement d%", err)
+		return err
+	}
 
 	return nil
 }
 
-func (ops *DbOpsImpl) DeleteProduct(id int) error {
+func (ops *DbOpsImpl) DeleteMessage(id int) error {
 
 	return nil
 }
