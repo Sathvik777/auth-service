@@ -13,6 +13,7 @@ import (
 
 	"github.com/Sathvik777/go-api-skeleton/api"
 	"github.com/Sathvik777/go-api-skeleton/db"
+	"github.com/joho/godotenv"
 	"gopkg.in/yaml.v2"
 )
 
@@ -71,6 +72,7 @@ func setupRouting(client db.DbOpsImpl) {
 	http.HandleFunc("/api/messages/", handleProduct)
 }
 
+//TODO: 
 func waitForShutdown(srv *http.Server) {
 	interruptChan := make(chan os.Signal, 1)
 	signal.Notify(interruptChan, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
@@ -86,7 +88,12 @@ func waitForShutdown(srv *http.Server) {
 }
 
 func main() {
-	config := setUpConfig("config.yaml")
+	if err := godotenv.Load(); err != nil {
+        log.Print("No .env file found")
+    }
+	configDir := os.Getenv("CONFIG_DIR")
+
+	config := setUpConfig(configDir)
 	dbClient := setupDb(config.Database)
 	if err := db.Migrate(dbClient.DbClient, config.Database); err != nil {
 		log.Fatal("Did not migrate")

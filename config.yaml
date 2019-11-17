@@ -4,3 +4,4 @@ database:
   port: "3366"
   name: skeleton
   password: pass
+  address: localhost

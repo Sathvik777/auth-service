@@ -15,6 +15,7 @@ type DbConfig struct {
 	Port     string
 	Name     string
 	Password string
+	Address  string
 }
 
 func Migrate(instance *sql.DB, config DbConfig) error {
@@ -41,7 +42,7 @@ func Migrate(instance *sql.DB, config DbConfig) error {
 }
 
 func Init(config DbConfig) (*sql.DB, error) {
-	db, err := sql.Open("mysql", "root:"+config.Password+"@tcp(localhost:"+config.Port+")/"+config.Name+"?charset=utf8&parseTime=true&multiStatements=true")
+	db, err := sql.Open("mysql", "root:"+config.Password+"@tcp("+config.Address+":"+config.Port+")/"+config.Name+"?charset=utf8&parseTime=true&multiStatements=true")
 	err = db.Ping()
 	if err != nil {
 		log.Fatal("Cannot open database connection. ", err)
