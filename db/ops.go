@@ -26,35 +26,28 @@ func (ops *DbOpsImpl) GetMessage(id int) (httpbody.BasicResponse, error) {
 }
 
 func (ops *DbOpsImpl) InsertMessage(request httpbody.MessageRequest) (int64, error) {
-	stmt, err := ops.DbClient.Prepare("INSERT messages (message) VALUES (?)")
+
+	tx, err := ops.DbClient.Begin()
+	res, err := tx.Exec("INSERT messages (message) VALUES (?)", request.Message)
 	if err != nil {
-		log.Panicf("Cannot create statement d%", err)
+		log.Panic("Cannot Execute statement ", err)
+		tx.Rollback()
 		return 0, err
 	}
-
-	res, err := stmt.Exec(request.Message)
-	if err != nil {
-		log.Panicf("Cannot Execute statement d%", err)
-		return 0, err
-	}
-
+	tx.Commit()
 	return res.LastInsertId()
 }
 
 func (ops *DbOpsImpl) UpdateMessage(request httpbody.MessageRequest) error {
 
-	stmt, err := ops.DbClient.Prepare("UPDATE messages SET message = ? WHERE id = ?")
+	tx, err := ops.DbClient.Begin()
+	_, err = tx.Exec("UPDATE messages SET message = ? WHERE id = ?", request.Message, request.Id)
 	if err != nil {
-		log.Panicf("Cannot create statement d%", err)
+		log.Panic("Cannot Execute statement", err)
+		tx.Rollback()
 		return err
 	}
-
-	_, err = stmt.Exec(request.Message, request.Id)
-	if err != nil {
-		log.Panicf("Cannot Execute statement d%", err)
-		return err
-	}
-
+	tx.Commit()
 	return nil
 }
 
